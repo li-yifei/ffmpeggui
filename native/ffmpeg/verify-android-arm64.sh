@@ -8,7 +8,7 @@ PROJECT_ROOT="$(CDPATH='' cd -- "$SCRIPT_DIR/../.." && pwd)"
 readonly PROJECT_ROOT
 readonly BINARY="${1:-$PROJECT_ROOT/app/src/main/libs/arm64-v8a/libffmpeg.so}"
 readonly NDK_ROOT="${ANDROID_NDK_ROOT:-/opt/homebrew/share/android-commandlinetools/ndk/29.0.14206865}"
-readonly EXPECTED_SHA256="3e0eaf750cda7b06be48a1eb2f34714b5fc4854a90b0f2c635c09c2080288133"
+readonly EXPECTED_SHA256="3435fbd16c5d2ba37a790c155bd2274fc0d3c2ccc755af49b828511837fa4504"
 
 case "$(uname -s)" in
     Darwin) readonly NDK_HOST="darwin-x86_64" ;;
@@ -107,7 +107,7 @@ if command -v adb >/dev/null 2>&1; then
 fi
 
 if [[ -n "$device_serial" ]]; then
-    readonly DEVICE_BINARY="/data/local/tmp/ffmpeggui-ffmpeg-8.1.2"
+    readonly DEVICE_BINARY="/data/local/tmp/ffmpeggui-ffmpeg-9.0.2"
     adb_device=(adb -s "$device_serial")
     cleanup_device_binary() {
         "${adb_device[@]}" shell rm -f "$DEVICE_BINARY" >/dev/null 2>&1 || true

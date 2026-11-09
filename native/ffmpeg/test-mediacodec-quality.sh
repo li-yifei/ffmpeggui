@@ -119,6 +119,11 @@ run_quality_case() {
     fi
 
     component="$(sed -n 's/.*MediaCodec encoder \([^ ]*\) output format.*/\1/p' "$encode_log" | head -n 1)"
+    if [[ -n "$component" && "$requirement" == "optional" ]] &&
+            [[ "$component" == c2.android.* || "$component" == OMX.google.* ]]; then
+        echo "$codec: skipped; Android selected the reference software component $component (no hardware encoder)."
+        return 0
+    fi
     if [[ -z "$component" || "$component" == c2.android.* || "$component" == OMX.google.* ]]; then
         echo "$codec selected a reference/software component: ${component:-unknown}." >&2
         return 1
@@ -130,9 +135,14 @@ run_quality_case() {
     fi
 
     "${adb_device[@]}" pull "$remote_output" "$local_output" >/dev/null
+    # Some encoders (e.g. c2.exynos.*) tag their output as BT.709 limited range
+    # while the fixture is untagged. Without identical tags, the host filter
+    # graph inserts a colorspace conversion before ssim/psnr and the metrics
+    # measure that conversion instead of the encoder. Compare raw samples.
+    local metric_tags='setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709'
     if ! "$HOST_FFMPEG" -hide_banner -loglevel info \
             -i "$LOCAL_SOURCE" -i "$local_output" \
-            -lavfi '[0:v]settb=AVTB,setpts=PTS-STARTPTS,split=2[rs][rp];[1:v]settb=AVTB,setpts=PTS-STARTPTS,split=2[ds][dp];[rs][ds]ssim;[rp][dp]psnr' \
+            -lavfi "[0:v]settb=AVTB,setpts=PTS-STARTPTS,$metric_tags,split=2[rs][rp];[1:v]settb=AVTB,setpts=PTS-STARTPTS,$metric_tags,split=2[ds][dp];[rs][ds]ssim;[rp][dp]psnr" \
             -frames:v "$FRAMES" -f null - >"$metric_log" 2>&1; then
         echo "$codec host quality analysis failed." >&2
         sed -n '1,240p' "$metric_log" >&2

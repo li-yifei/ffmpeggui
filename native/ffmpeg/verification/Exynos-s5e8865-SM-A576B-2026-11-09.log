@@ -1,0 +1,81 @@
+Device: Samsung SM-A576B (a57x)
+SoC: s5e8865 (Samsung Exynos)
+Android version/API: 17/37
+Build: CP2A.260605.016 / A576BXXS6BZJ2
+Kernel page size: 4096
+ABI: arm64-v8a
+Test date: 2026-11-09 BRT
+
+Artifact under test
+-------------------
+FFmpeg tag: n9.0.2
+FFmpeg commit: 946fcce07b6dcd0331c8cc609192aeff5e1924f8
+Android NDK: 29.0.14206865
+Artifact: app/src/main/libs/arm64-v8a/libffmpeg.so (standard GPL AIO)
+SHA-256: 3435fbd16c5d2ba37a790c155bd2274fc0d3c2ccc755af49b828511837fa4504
+Size: 36,332,064 bytes
+Reported version: ffmpeg version 9.0.2
+Patches 0001-0005: unchanged (same SHA-256 digests as native/ffmpeg/README.md)
+
+This is the exact promoted binary, executed from /data/local/tmp by the
+scripts below. verify-android-arm64-aio.sh and verify-android-arm64.sh both
+passed (device run included) before the device tests.
+
+Hardware codec inventory selected by Android
+--------------------------------------------
+H.264 encoder/decoder: c2.exynos.h264.encoder / c2.exynos.h264.decoder
+HEVC encoder/decoder:  c2.exynos.hevc.encoder / c2.exynos.hevc.decoder
+VP9 encoder/decoder:   c2.exynos.vp9.encoder / c2.exynos.vp9.decoder
+AV1 encoder/decoder:   c2.android.av1.encoder / c2.android.av1-dav1d.decoder
+The device has no hardware AV1 encoder; Android selects its reference
+software component.
+
+smoke-test-mediacodec.sh: exit 0
+--------------------------------
+h264 encode: c2.exynos.h264.encoder (locked with -codec_name); decode: c2.exynos.h264.decoder
+hevc encode: c2.exynos.hevc.encoder (locked with -codec_name); decode: c2.exynos.hevc.decoder
+vp9 encode: c2.exynos.vp9.encoder (locked with -codec_name); decode: c2.exynos.vp9.decoder
+av1 encode: c2.android.av1.encoder (locked with -codec_name); decode: c2.android.av1-dav1d.decoder
+av1 encoder is Android's reference software component.
+
+test-mediacodec-encoder-matrix.sh: exit 0 (15/15 cases, 30/30 frames each)
+--------------------------------------------------------------------------
+h264-a0-yuv420p-640x360-mp4  h264-a0-nv12-640x360-mp4  h264-a0-yuv420p-638x358-mp4
+h264-a1-yuv420p-640x360-mp4  h264-a1-nv12-640x360-mp4  h264-a1-yuv420p-638x358-mp4
+hevc-a0-yuv420p-640x360-mp4  hevc-a0-nv12-640x360-mp4  hevc-a0-yuv420p-638x358-mp4
+hevc-a1-yuv420p-640x360-mp4  hevc-a1-nv12-640x360-mp4  hevc-a1-yuv420p-638x358-mp4
+h264-a0-yuv420p-640x360-h264
+surface-h264-hevc-a0 (encode c2.exynos.hevc.encoder, decode c2.exynos.h264.decoder)
+surface-h264-hevc-a1 (encode c2.exynos.hevc.encoder, decode c2.exynos.h264.decoder)
+
+test-short-mediacodec-drain.sh: exit 0
+--------------------------------------
+H.264 and HEVC decoded exactly 1, 3, 9, 10, 11 and 30 frames
+(c2.exynos.{h264,hevc}.encoder -> c2.exynos.{h264,hevc}.decoder).
+
+test-mediacodec-quality.sh: exit 0
+----------------------------------
+Fixture: 1228x720, 90 frames; thresholds: SSIM >= 0.95, PSNR >= 30.0 dB
+hevc: component=c2.exynos.hevc.encoder SSIM=0.999329 PSNR=55.501051dB
+av1: skipped; Android selected the reference software component c2.android.av1.encoder (no hardware encoder).
+With REQUIRE_AV1=1 the script still fails closed on this device.
+
+Quality-harness finding
+-----------------------
+Before the harness fix in this change, the HEVC case failed on this device
+with SSIM=0.978923 PSNR=26.056069 for both the 8.1.2 artifact (3e0eaf75...)
+and the 9.0.2 artifact, byte-identical metrics. c2.exynos.hevc.encoder tags
+its output BT.709 limited range while the fixture is untagged, so the host
+filter graph inserted a colorspace conversion before ssim/psnr. Comparing raw
+samples (setparams with identical tags on both inputs) gives
+SSIM=0.999329 PSNR=55.501051 dB. Aligned 1280x720 input and software decode
+gave the same pre-fix numbers, ruling out stride and the decoder path.
+
+Throughput: 8.1.2 AIO (3e0eaf75...) vs 9.0.2 AIO (3435fbd1...)
+---------------------------------------------------------------
+Input: 1920x1080 HEVC Main 10, 24 fps, 480 frames. Wall time (-benchmark
+rtime), two runs each, same device and thermal state.
+HEVC 10-bit software decode (-f null):     8.1.2 1.687/1.755 s  9.0.2 1.707/1.740 s
+libx265 ultrafast CRF 26:                   8.1.2 8.384/8.115 s  9.0.2 8.252/8.431 s
+h264_mediacodec 6 Mb/s (yuv420p):           8.1.2 2.752/2.821 s  9.0.2 2.951/2.763 s
+The two builds are equivalent within run-to-run noise on this device.

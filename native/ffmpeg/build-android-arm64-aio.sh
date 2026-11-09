@@ -477,6 +477,14 @@ for patch_spec in \
     (cd "$SOURCE_ROOT/ffmpeg" && patch -p1 --forward --batch <"$patch_file")
 done
 
+# FFmpeg's version.sh prefers `git describe` over the tarball's RELEASE file.
+# The source is extracted inside this repository's worktree, so without a
+# VERSION file the CLI would report this repository's commit (for example
+# "ffmpeg version 3594b02") and the binary digest would change with every
+# unrelated commit. Pin the reported version to the locked FFmpeg tag.
+ffmpeg_locked_tag="$(lock_field ffmpeg 2)"
+printf '%s\n' "${ffmpeg_locked_tag#n}" >"$SOURCE_ROOT/ffmpeg/VERSION"
+
 mkdir -p "$BUILD_ROOT/ffmpeg"
 (
     cd "$BUILD_ROOT/ffmpeg"
@@ -487,7 +495,7 @@ mkdir -p "$BUILD_ROOT/ffmpeg"
     export CFLAGS="$CFLAGS"
     export CXXFLAGS="$CXXFLAGS"
     "$SOURCE_ROOT/ffmpeg/configure" \
-        --prefix=/ffmpeggui/ffmpeg-8.1.2-gpl-aio \
+        --prefix=/ffmpeggui/ffmpeg-9.0.2-gpl-aio \
         --target-os=android --arch=aarch64 --cpu=armv8-a \
         --enable-cross-compile \
         --cc="${TARGET}${ANDROID_API}-clang" \

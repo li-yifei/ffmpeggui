@@ -8,8 +8,8 @@ the GPL AIO build described here.
 
 ## Pinned inputs
 
-- FFmpeg tag: `n8.1.2`
-- FFmpeg commit: `38b88335f99e76ed89ff3c93f877fdefce736c13`
+- FFmpeg tag: `n9.0.2`
+- FFmpeg commit: `946fcce07b6dcd0331c8cc609192aeff5e1924f8`
 - Android NDK: r29 (`29.0.14206865`)
 - Minimum Android API used by the native build: 26
 - ABI: `arm64-v8a`
@@ -33,7 +33,7 @@ the GPL AIO build described here.
 
 The source lock currently selects pkgconf 2.5.1, FreeType 2.14.1, FriBidi
 1.0.16, HarfBuzz 11.4.5, libass 0.17.4, libaribcaption 1.1.2, x264 build 165,
-x265 4.1+1/API build 215, libvpx 1.16.0, libaom 3.13.1, and FFmpeg 8.1.2.
+x265 4.1+1/API build 215, libvpx 1.16.0, libaom 3.13.1, and FFmpeg 9.0.2.
 Every fetched archive is verified before extraction.
 
 ## Standard GPL AIO capability and license profile
@@ -113,16 +113,20 @@ The build intentionally leaves
 repeat the clean build to confirm its digest when preparing a Release, then
 promote that exact verified file and update the recorded final digest.
 
-FFmpeg 8.1.2 can return `EAGAIN` after a MediaCodec output-format event even
+FFmpeg 8.1.2 and 9.0.2 can return `EAGAIN` after a MediaCodec output-format event even
 though decoder drain has started. The ffmpeg CLI correctly treats `EAGAIN`
 during flush as a decoder contract violation and aborts. The local patch keeps
 dequeueing transient MediaCodec events for at most four blocking attempts
 (four seconds total). A codec that exhausts the limit returns a decoding error
 and ends its drain, keeping the failure bounded. FFmpeg master commit
 `03dc244a693ce639cebf82f7bae112fb75580919`, checked on 2026-08-12, still has
-the same drain behavior and contains no equivalent fix.
+the same drain behavior and contains no equivalent fix. Between `n8.1.2` and
+`n9.0.2`, `libavcodec/mediacodecenc.c` is byte-identical and
+`libavcodec/mediacodecdec_common.c` only gains a MediaTek MPEG-2 slice-height
+quirk, so all three MediaCodec patches still apply unchanged (patch 0001 with
+a two-line offset) and remain necessary.
 
-FFmpeg 8.1.2's synchronous NDK global-header probe queues a dummy frame and
+FFmpeg 8.1.2's and 9.0.2's synchronous NDK global-header probe queues a dummy frame and
 EOS, then flushes the encoder before the first real frame. Android defines
 flush recovery for decoders; encoder behavior is undefined. On the Pixel 10
 Pro XL / Tensor G5, the next input reaches Codec2 status 95 and FFmpeg returns
@@ -164,14 +168,14 @@ For direct runtime inspection on an authorized device:
 
 ```sh
 adb push native/ffmpeg/.build/aio/staging/libffmpeg.so \
-  /data/local/tmp/ffmpeggui-ffmpeg-8.1.2-gpl-aio
-adb shell chmod 0755 /data/local/tmp/ffmpeggui-ffmpeg-8.1.2-gpl-aio
-adb shell /data/local/tmp/ffmpeggui-ffmpeg-8.1.2-gpl-aio -hide_banner -version
-adb shell /data/local/tmp/ffmpeggui-ffmpeg-8.1.2-gpl-aio -hide_banner -encoders \
+  /data/local/tmp/ffmpeggui-ffmpeg-9.0.2-gpl-aio
+adb shell chmod 0755 /data/local/tmp/ffmpeggui-ffmpeg-9.0.2-gpl-aio
+adb shell /data/local/tmp/ffmpeggui-ffmpeg-9.0.2-gpl-aio -hide_banner -version
+adb shell /data/local/tmp/ffmpeggui-ffmpeg-9.0.2-gpl-aio -hide_banner -encoders \
   | grep -E 'libx264|libx265|libvpx-vp9|libaom-av1'
-adb shell /data/local/tmp/ffmpeggui-ffmpeg-8.1.2-gpl-aio -hide_banner -filters \
+adb shell /data/local/tmp/ffmpeggui-ffmpeg-9.0.2-gpl-aio -hide_banner -filters \
   | grep -E 'mpdecimate|drawtext|ass|subtitles'
-adb shell /data/local/tmp/ffmpeggui-ffmpeg-8.1.2-gpl-aio \
+adb shell /data/local/tmp/ffmpeggui-ffmpeg-9.0.2-gpl-aio \
   -hide_banner -h decoder=libaribcaption
 ```
 
@@ -285,7 +289,7 @@ equivalent component, and removes its internal policy option immediately
 before process execution. The same AIO binary therefore supports vendor
 hardware and Android system software without SoC-specific builds.
 
-FFmpeg 8.1.2 exposes `-codec_name` for MediaCodec encoders. Its MediaCodec
+FFmpeg 9.0.2 exposes `-codec_name` for MediaCodec encoders. Its MediaCodec
 decoder wrapper lets Android select the component; use `-hwaccel mediacodec`
 before `-i` to select that decoder path. The smoke test prints the component
 that Android actually selected for both directions and then repeats each
@@ -293,9 +297,27 @@ encoder test locked to that exact component.
 
 ## Final GPL AIO artifact and historical MediaCodec evidence
 
-On 2026-08-12 JST, the promoted GPL AIO staging artifact passed
-`verify-android-arm64-aio.sh` and two consecutive clean builds produced the
-same bytes:
+On 2026-11-09 BRT, the promoted FFmpeg 9.0.2 GPL AIO staging artifact passed
+`verify-android-arm64-aio.sh` and `verify-android-arm64.sh` (device run
+included). Two clean builds produced the same bytes, one of them from a
+different repository commit: the build now writes FFmpeg's `VERSION` file from
+the locked tag, so the binary reports `ffmpeg version 9.0.2` and its digest no
+longer depends on this repository's `git describe` output.
+
+```text
+SHA-256 3435fbd16c5d2ba37a790c155bd2274fc0d3c2ccc755af49b828511837fa4504
+Size    36,332,064 bytes
+```
+
+This exact artifact passed all four device scripts on a Samsung SM-A576B
+(Exynos s5e8865, Android 17/API 37), selecting `c2.exynos.*` hardware
+components for H.264, HEVC, and VP9; see
+[`verification/Exynos-s5e8865-SM-A576B-2026-11-09.log`](verification/Exynos-s5e8865-SM-A576B-2026-11-09.log).
+That log also records the quality-harness colour-tag fix and an 8.1.2 versus
+9.0.2 throughput comparison.
+
+The previous FFmpeg 8.1.2 GPL AIO artifact (2026-08-12 JST) reported its
+version as a repository commit hash (`3594b02`):
 
 ```text
 SHA-256 3e0eaf750cda7b06be48a1eb2f34714b5fc4854a90b0f2c635c09c2080288133
@@ -369,7 +391,7 @@ The recipe pins FDK AAC tag `v2.0.3`, peeled commit
 `716f4394641d53f0d79c9ddac3fa93b03a49f278`, and official tag-archive SHA-256
 `e25671cd96b10bad896aa42ab91a695a9e573395262baed4e4a2ff178d6a3a78`.
 
-FFmpeg 8.1.2 classifies FDK AAC in its external nonfree list and states that an
+FFmpeg 9.0.2 classifies FDK AAC in its external nonfree list and states that an
 FDK-enabled GPL combination is unredistributable. The FDK notice grants no
 express or implied patent license, so local builders remain responsible for
 patent authorization appropriate to their use. Standard builds and AIO

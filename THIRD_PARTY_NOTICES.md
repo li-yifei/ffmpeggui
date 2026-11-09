@@ -17,16 +17,16 @@ all `nonfree` code.
 ## Standard FFmpeg GPL AIO executable
 
 The Android package contains one statically composed FFmpeg command-line
-executable built from FFmpeg tag `n8.1.2`, commit
-`38b88335f99e76ed89ff3c93f877fdefce736c13`. The build passes
+executable built from FFmpeg tag `n9.0.2`, commit
+`946fcce07b6dcd0331c8cc609192aeff5e1924f8`. The build passes
 `--enable-gpl --disable-version3 --disable-nonfree`. `mpdecimate`, x264, and
 x265 activate FFmpeg's GPL terms, so the complete resulting native executable
 is distributed under GNU GPL version 2 or later.
 
-- Upstream source: <https://github.com/FFmpeg/FFmpeg/tree/38b88335f99e76ed89ff3c93f877fdefce736c13>
+- Upstream source: <https://github.com/FFmpeg/FFmpeg/tree/946fcce07b6dcd0331c8cc609192aeff5e1924f8>
 - Full GPLv2 text: [`third_party/licenses/GPL-2.0.txt`](third_party/licenses/GPL-2.0.txt)
 - Exact upstream license overview: [`third_party/licenses/FFmpeg-LICENSE.md`](third_party/licenses/FFmpeg-LICENSE.md)
-- Upstream license overview: <https://github.com/FFmpeg/FFmpeg/blob/38b88335f99e76ed89ff3c93f877fdefce736c13/LICENSE.md>
+- Upstream license overview: <https://github.com/FFmpeg/FFmpeg/blob/946fcce07b6dcd0331c8cc609192aeff5e1924f8/LICENSE.md>
 - Local build and corresponding-source instructions:
   [`native/ffmpeg/README.md`](native/ffmpeg/README.md)
 

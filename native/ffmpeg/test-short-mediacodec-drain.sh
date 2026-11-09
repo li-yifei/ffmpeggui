@@ -5,7 +5,7 @@ set -Eeuo pipefail
 readonly SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 readonly PROJECT_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
 readonly BINARY="${FFMPEG_BINARY:-$PROJECT_ROOT/app/src/main/libs/arm64-v8a/libffmpeg.so}"
-readonly REMOTE_BINARY="/data/local/tmp/ffmpeggui-ffmpeg-8.1.2-short-drain"
+readonly REMOTE_BINARY="/data/local/tmp/ffmpeggui-ffmpeg-9.0.2-short-drain"
 readonly -a FRAME_COUNTS=(1 3 9 10 11 30)
 
 if [[ ! -f "$BINARY" ]]; then

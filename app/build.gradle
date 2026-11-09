@@ -5,7 +5,7 @@ plugins {
 def generatedLegalAssetsDir = layout.buildDirectory.dir('generated/legalAssets').get().asFile
 def bundledAioFfmpeg = file('src/main/libs/arm64-v8a/libffmpeg.so')
 def aioVerifier = rootProject.file('native/ffmpeg/verify-android-arm64-aio.sh')
-def bundledAioSha256 = '3e0eaf750cda7b06be48a1eb2f34714b5fc4854a90b0f2c635c09c2080288133'
+def bundledAioSha256 = '3435fbd16c5d2ba37a790c155bd2274fc0d3c2ccc755af49b828511837fa4504'
 def pinnedNdkVersion = '29.0.14206865'
 def localPropertiesFile = rootProject.file('local.properties')
 def configuredSdkDirectory = providers.provider {
@@ -65,8 +65,8 @@ android {
         applicationId 'com.silentlexx.ffmpeggui_os'
         minSdk 26
         targetSdk 35
-        versionCode 8102003
-        versionName '8.1.2-modern3'
+        versionCode 9002001
+        versionName '9.0.2-modern1'
 
         ndk {
             abiFilters 'arm64-v8a'

@@ -206,7 +206,7 @@ export PATH="$STANDARD_ROOT/host-bin:$TOOLCHAIN/bin:$PATH"
 
 (cd "$BUILD_ROOT/ffmpeg" && \
     "$STANDARD_SOURCE/configure" \
-        --prefix=/ffmpeggui/ffmpeg-8.1.2-gpl-aio-fdk-local \
+        --prefix=/ffmpeggui/ffmpeg-9.0.2-gpl-aio-fdk-local \
         --target-os=android --arch=aarch64 --cpu=armv8-a \
         --enable-cross-compile \
         --cc="${TARGET}${ANDROID_API}-clang" \

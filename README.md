@@ -10,7 +10,7 @@ of Google Play services.
 The original project provides the GUI, Console, batch-processing, and direct
 FFmpeg workflow. This fork adds the following features and modernization work:
 
-- **FFmpeg 8.1.2 GPL AIO runtime for arm64 Android.** One bundled executable
+- **FFmpeg 9.0.2 GPL AIO runtime for arm64 Android.** One bundled executable
   works across supported Snapdragon, Tensor, Exynos, and MediaTek devices.
   Android's runtime codec inventory lets the same arm64 binary serve every
   supported SoC family, while bundled x264, x265, libvpx, and libaom encoders
@@ -75,7 +75,7 @@ FFmpeg workflow. This fork adds the following features and modernization work:
 
 The application supports Android 8.0/API 26 and later, targets API 35, and is
 packaged for `arm64-v8a`. The standard Release package ships a reproducible,
-standalone FFmpeg 8.1.2 GPL AIO CLI with Android MediaCodec support. The binary
+standalone FFmpeg 9.0.2 GPL AIO CLI with Android MediaCodec support. The binary
 statically links the pinned text/subtitle libraries and x264, x265, libvpx, and
 libaom, including the NDK static C++ runtime, so third-party codec `.so` files
 are unnecessary. Its AArch64 PIE load segments are aligned to 16KB for devices
@@ -278,7 +278,11 @@ REQUIRE_AV1=1 ANDROID_SERIAL=<device-serial> ./native/ffmpeg/test-mediacodec-qua
 The quality regression uses an unaligned 1228x720 fixture and verifies decoded
 pixels with host-side SSIM/PSNR. On the tested Pixel 10 Pro XL, planar HEVC
 measured SSIM 0.999304 / PSNR 52.728940 dB and planar AV1 measured SSIM
-0.999240 / PSNR 52.272864 dB.
+0.999240 / PSNR 52.272864 dB. On the Samsung SM-A576B (Exynos s5e8865), planar
+HEVC measured SSIM 0.999329 / PSNR 55.501051 dB. The metrics compare raw
+samples with identical colour tags on both inputs, because some encoders tag
+their output BT.709 while the fixture is untagged. Without `REQUIRE_AV1=1`, the
+script skips AV1 when Android only offers its reference software encoder.
 
 The device records are
 [`SM8750P-2026-08-12.log`](native/ffmpeg/verification/SM8750P-2026-08-12.log)
@@ -288,6 +292,8 @@ The Tensor planar quality regression is recorded in
 [`Tensor-G5-planar-quality-2026-08-12.log`](native/ffmpeg/verification/Tensor-G5-planar-quality-2026-08-12.log).
 The four-codec Android system-software check is recorded in
 [`SM8750P-system-software-2026-08-12.log`](native/ffmpeg/verification/SM8750P-system-software-2026-08-12.log).
+The FFmpeg 9.0.2 artifact's Exynos record is
+[`Exynos-s5e8865-SM-A576B-2026-11-09.log`](native/ffmpeg/verification/Exynos-s5e8865-SM-A576B-2026-11-09.log).
 The historical path-sanitized modern3 build and signing gate is recorded in
 [`modern3-release-2026-08-12.log`](native/ffmpeg/verification/modern3-release-2026-08-12.log).
 The current GPL AIO build, signature, embedded legal materials, and matching
@@ -313,7 +319,7 @@ included for review in
 
 ## Licensing
 
-The standard packaged FFmpeg executable is built from FFmpeg `n8.1.2` with
+The standard packaged FFmpeg executable is built from FFmpeg `n9.0.2` with
 `--enable-gpl --disable-version3 --disable-nonfree`, so the resulting native
 binary is distributed under GNU GPL version 2 or later. See
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), the full GPLv2 text in

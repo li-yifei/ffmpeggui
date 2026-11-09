@@ -8,7 +8,7 @@ PROJECT_ROOT="$(CDPATH='' cd -- "$SCRIPT_DIR/../.." && pwd)"
 readonly PROJECT_ROOT
 readonly CANDIDATE="${1:-$SCRIPT_DIR/.build/aio/staging/libffmpeg.so}"
 readonly DESTINATION="$PROJECT_ROOT/app/src/main/libs/arm64-v8a/libffmpeg.so"
-readonly EXPECTED_SHA256="3e0eaf750cda7b06be48a1eb2f34714b5fc4854a90b0f2c635c09c2080288133"
+readonly EXPECTED_SHA256="3435fbd16c5d2ba37a790c155bd2274fc0d3c2ccc755af49b828511837fa4504"
 readonly TEMPORARY_DESTINATION="${DESTINATION}.aio-new"
 
 cleanup() {
